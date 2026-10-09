@@ -1,0 +1,402 @@
+{
+  "generated_by_isoloom": "from isoloom.yml; don't edit: change the spec and run `isoloom generate` (`isoloom check` fails when this file is out of date)",
+  "resolved_version": 1,
+  "name": "xben-066-router-administration",
+  "instance": null,
+  "inputs": [],
+  "networks": {
+    "lab": {
+      "cidr": "10.61.109.0/24",
+      "docker_cidr": "10.61.109.0/24",
+      "internet": false,
+      "gateway": null,
+      "gateway_address": "10.61.109.1",
+      "router": null,
+      "controller": "10.61.109.253"
+    }
+  },
+  "reach": [],
+  "machines": {
+    "db": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.61.109.10"
+      },
+      "docker_addresses": {
+        "lab": "10.61.109.10"
+      },
+      "services": [
+        {
+          "port": 3306,
+          "name": "mysql",
+          "http": false,
+          "publish": null
+        }
+      ],
+      "depends_on": [],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 1024,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    },
+    "haproxy": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.61.109.20"
+      },
+      "docker_addresses": {
+        "lab": "10.61.109.20"
+      },
+      "services": [
+        {
+          "port": 8001,
+          "name": "web",
+          "http": true,
+          "publish": null
+        }
+      ],
+      "depends_on": [
+        "mitmproxy"
+      ],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    },
+    "mitmproxy": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.61.109.30"
+      },
+      "docker_addresses": {
+        "lab": "10.61.109.30"
+      },
+      "services": [
+        {
+          "port": 8002,
+          "name": "web",
+          "http": true,
+          "publish": 8002
+        }
+      ],
+      "depends_on": [
+        "hrs-admin-router"
+      ],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    },
+    "hrs-admin-router": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.61.109.40"
+      },
+      "docker_addresses": {
+        "lab": "10.61.109.40"
+      },
+      "services": [
+        {
+          "port": 80,
+          "name": "web",
+          "http": true,
+          "publish": null
+        }
+      ],
+      "depends_on": [
+        "db"
+      ],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    }
+  },
+  "start_order": [
+    "db",
+    "hrs-admin-router",
+    "mitmproxy",
+    "haproxy"
+  ],
+  "clones": {},
+  "tools": {},
+  "groups": {},
+  "router": null,
+  "controller": {
+    "addresses": {
+      "lab": "10.61.109.253"
+    }
+  },
+  "published": [
+    {
+      "machine": "mitmproxy",
+      "port": 8002,
+      "host_port": 8002
+    }
+  ],
+  "targets": {
+    "possible": [
+      "docker",
+      "hosted",
+      "docker-vm",
+      "cloud-docker",
+      "kubernetes"
+    ],
+    "generated": [
+      "docker",
+      "hosted",
+      "docker-vm",
+      "cloud-docker",
+      "kubernetes"
+    ],
+    "refused": {},
+    "not_possible": {
+      "hybrid": "only when some machines are containers and others are VMs",
+      "vagrant": "needs `vm:` on db, haproxy, mitmproxy, hrs-admin-router",
+      "proxmox": "needs `vm:` on db, haproxy, mitmproxy, hrs-admin-router",
+      "cloud-vm": "needs `vm:` on db, haproxy, mitmproxy, hrs-admin-router",
+      "external": "needs `external:` on db, haproxy, mitmproxy, hrs-admin-router"
+    }
+  },
+  "checks": {
+    "default_position": "networks",
+    "positions": [
+      {
+        "position": "networks",
+        "machine": null,
+        "runner": "isoloom-check",
+        "checks": [
+          {
+            "name": "the Router Administration page answers",
+            "derived": false,
+            "kind": "http",
+            "target": "http://mitmproxy:8002/login",
+            "expect": "200",
+            "wait": 180
+          },
+          {
+            "name": "a wrong login is refused through the proxy chain",
+            "derived": false,
+            "kind": "script",
+            "target": "checks/probe.sh",
+            "expect": "",
+            "wait": 60
+          }
+        ]
+      },
+      {
+        "position": "db",
+        "machine": "db",
+        "runner": "isoloom-check-db",
+        "checks": [
+          {
+            "name": "haproxy:8001 from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.20:8001/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "mitmproxy:8002 from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.30:8002/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "hrs-admin-router:80 from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.40:80/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      },
+      {
+        "position": "haproxy",
+        "machine": "haproxy",
+        "runner": "isoloom-check-haproxy",
+        "checks": [
+          {
+            "name": "db:3306 from haproxy",
+            "derived": true,
+            "kind": "tcp",
+            "target": "10.61.109.10:3306",
+            "expect": "open",
+            "wait": 30
+          },
+          {
+            "name": "mitmproxy:8002 from haproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.30:8002/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "hrs-admin-router:80 from haproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.40:80/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from haproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      },
+      {
+        "position": "mitmproxy",
+        "machine": "mitmproxy",
+        "runner": "isoloom-check-mitmproxy",
+        "checks": [
+          {
+            "name": "db:3306 from mitmproxy",
+            "derived": true,
+            "kind": "tcp",
+            "target": "10.61.109.10:3306",
+            "expect": "open",
+            "wait": 30
+          },
+          {
+            "name": "haproxy:8001 from mitmproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.20:8001/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "hrs-admin-router:80 from mitmproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.40:80/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from mitmproxy",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      },
+      {
+        "position": "hrs-admin-router",
+        "machine": "hrs-admin-router",
+        "runner": "isoloom-check-hrs-admin-router",
+        "checks": [
+          {
+            "name": "db:3306 from hrs-admin-router",
+            "derived": true,
+            "kind": "tcp",
+            "target": "10.61.109.10:3306",
+            "expect": "open",
+            "wait": 30
+          },
+          {
+            "name": "haproxy:8001 from hrs-admin-router",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.20:8001/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "mitmproxy:8002 from hrs-admin-router",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.61.109.30:8002/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from hrs-admin-router",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      }
+    ]
+  },
+  "message": "Router Administration answers at http://localhost:8002/.\nA router admin panel behind two proxies. Outdated proxies can disagree on where a request ends.\n"
+}
