@@ -7,6 +7,9 @@
 version: 1
 name: xben-066-router-administration
 
+# Given by the CyberCTF launcher: this player's flag. Without it the development flag.
+inputs: [CTF_FLAG_MAIN]
+
 networks:
   lab: { cidr: 10.61.109.0/24, internet: false }
 
@@ -39,8 +42,11 @@ machines:
     services: [{ port: 80, name: web, http: true }]
     resources: { cpus: 1, memory_mb: 512 }
     depends_on: [db]
+    inputs: [CTF_FLAG_MAIN]
+    volumes: { ctf: /ctf }   # the flag, written by ctf/flag.sh at every start
     docker:
       build: build/hrs-admin-router
+      init: [ctf/flag.sh]
 
 checks:
   - name: the Router Administration page answers

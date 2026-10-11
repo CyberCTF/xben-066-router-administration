@@ -9,6 +9,9 @@ services:
   db:
     build:
       context: ../../build/db
+      labels:
+        isoloom.managed: 'true'
+        isoloom.environment: xben-066-router-administration
     image: isoloom/xben-066-router-administration-db
     platform: linux/amd64
     hostname: db
@@ -38,6 +41,8 @@ services:
           memory: 1024M
     labels:
       isoloom.service.mysql: tcp:3306
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
     restart: unless-stopped
   db-routes:
     image: alpine:3.20
@@ -59,9 +64,15 @@ services:
       db:
         condition: service_started
     restart: unless-stopped
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   haproxy:
     build:
       context: ../../build/haproxy
+      labels:
+        isoloom.managed: 'true'
+        isoloom.environment: xben-066-router-administration
     image: isoloom/xben-066-router-administration-haproxy
     platform: linux/amd64
     hostname: haproxy
@@ -95,6 +106,8 @@ services:
           memory: 512M
     labels:
       isoloom.service.web: http:8001
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
     restart: unless-stopped
   haproxy-routes:
     image: alpine:3.20
@@ -116,9 +129,15 @@ services:
       haproxy:
         condition: service_started
     restart: unless-stopped
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   mitmproxy:
     build:
       context: ../../build/mitmproxy
+      labels:
+        isoloom.managed: 'true'
+        isoloom.environment: xben-066-router-administration
     image: isoloom/xben-066-router-administration-mitmproxy
     platform: linux/amd64
     hostname: mitmproxy
@@ -145,6 +164,8 @@ services:
         condition: service_completed_successfully
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
     deploy:
@@ -154,6 +175,8 @@ services:
           memory: 512M
     labels:
       isoloom.service.web: http:8002
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
     restart: unless-stopped
   mitmproxy-routes:
     image: alpine:3.20
@@ -175,15 +198,26 @@ services:
       mitmproxy:
         condition: service_started
     restart: unless-stopped
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   hrs-admin-router:
     build:
       context: ../../build/hrs-admin-router
+      labels:
+        isoloom.managed: 'true'
+        isoloom.environment: xben-066-router-administration
     image: isoloom/xben-066-router-administration-hrs-admin-router
     platform: linux/amd64
     hostname: hrs-admin-router
     networks:
       lab:
         ipv4_address: 10.61.109.40
+    environment:
+      CTF_FLAG_MAIN: ${CTF_FLAG_MAIN:-}
+    volumes:
+    - hrs-admin-router-ctf:/ctf
+    - isoloom-probe-amd64:/.isoloom-probe:ro
     healthcheck:
       test:
       - CMD
@@ -195,8 +229,6 @@ services:
       timeout: 3s
       retries: 60
       start_period: 10s
-    volumes:
-    - isoloom-probe-amd64:/.isoloom-probe:ro
     depends_on:
       isoloom-probe-amd64:
         condition: service_completed_successfully
@@ -211,6 +243,8 @@ services:
           memory: 512M
     labels:
       isoloom.service.web: http:80
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
     restart: unless-stopped
   hrs-admin-router-routes:
     image: alpine:3.20
@@ -232,6 +266,29 @@ services:
       hrs-admin-router:
         condition: service_started
     restart: unless-stopped
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
+  hrs-admin-router-init-1:
+    image: isoloom/xben-066-router-administration-hrs-admin-router
+    entrypoint:
+    - /bin/sh
+    - /isoloom/init/flag.sh
+    volumes:
+    - ../../ctf/flag.sh:/isoloom/init/flag.sh:ro
+    - hrs-admin-router-ctf:/ctf
+    network_mode: service:hrs-admin-router
+    environment:
+      CTF_FLAG_MAIN: ${CTF_FLAG_MAIN:-}
+    depends_on:
+      hrs-admin-router:
+        condition: service_healthy
+      hrs-admin-router-routes:
+        condition: service_healthy
+    restart: no
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-check:
     image: curlimages/curl:8.11.1
     profiles:
@@ -263,8 +320,13 @@ services:
         condition: service_healthy
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-check-db:
     image: curlimages/curl:8.11.1
     profiles:
@@ -290,8 +352,13 @@ services:
         condition: service_healthy
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-check-haproxy:
     image: curlimages/curl:8.11.1
     profiles:
@@ -317,8 +384,13 @@ services:
         condition: service_healthy
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-check-mitmproxy:
     image: curlimages/curl:8.11.1
     profiles:
@@ -344,8 +416,13 @@ services:
         condition: service_healthy
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-check-hrs-admin-router:
     image: curlimages/curl:8.11.1
     profiles:
@@ -371,8 +448,13 @@ services:
         condition: service_healthy
       hrs-admin-router:
         condition: service_healthy
+      hrs-admin-router-init-1:
+        condition: service_completed_successfully
       hrs-admin-router-routes:
         condition: service_healthy
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
   isoloom-probe-amd64:
     image: busybox:1.37.0-musl
     platform: linux/amd64
@@ -384,11 +466,24 @@ services:
     - isoloom-probe-amd64:/probe
     network_mode: none
     restart: no
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
 networks:
   lab:
     ipam:
       config:
       - subnet: 10.61.109.0/24
         gateway: 10.61.109.1
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
 volumes:
-  isoloom-probe-amd64: {}
+  hrs-admin-router-ctf:
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration
+  isoloom-probe-amd64:
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: xben-066-router-administration

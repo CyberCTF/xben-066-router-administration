@@ -4,7 +4,7 @@
 [validation benchmarks](https://github.com/xbow-engineering/validation-benchmarks) (by XBOW):
 a router administration panel (Flask, MySQL) behind a chain of an outdated HAProxy and mitmproxy, with an internal device service behind it.
 This repository runs it with [Isoloom](https://www.isoloom.com): [`isoloom.yml`](isoloom.yml) describes the machines,
-built by the benchmark's own Dockerfiles, vendored unchanged in [`build/hrs-admin-router/app/`](build/hrs-admin-router/app), with the fixed flag baked in.
+built by the benchmark's own Dockerfiles, vendored unchanged in [`build/hrs-admin-router/app/`](build/hrs-admin-router/app), with a development flag baked in; `ctf-entrypoint.sh` swaps in the player's flag (`CTF_FLAG_MAIN`) at every start.
 
 | Machine | Service |
 | --- | --- |
